@@ -1,0 +1,1287 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polygon Craft: Shape Explorer</title>
+
+<style>
+:root {
+    --ink: #203047;
+    --grass: #66b84f;
+    --deep: #28623d;
+    --gold: #ffd45c;
+    --panel: #fff8e7;
+    --line: #674b35;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: var(--ink);
+    background: #9bdcf4;
+}
+
+header {
+    background: #315f39;
+    color: white;
+    padding: 15px 18px;
+    text-align: center;
+    border-bottom: 7px solid #23482b;
+}
+
+header h1 {
+    margin: 0;
+    font-size: clamp(24px, 4vw, 36px);
+    text-shadow: 3px 3px #183b23;
+    letter-spacing: 1px;
+}
+
+header p {
+    margin: 6px 0 0;
+}
+
+.hud {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 12px;
+}
+
+.hud span {
+    background: var(--gold);
+    color: #342b1d;
+    padding: 8px 13px;
+    border: 3px solid #a77b2b;
+    font-weight: bold;
+}
+
+main {
+    width: min(1000px, 94%);
+    margin: 18px auto 30px;
+}
+
+.world-card {
+    background: #75c9ef;
+    border: 5px solid #fff;
+    box-shadow: 0 5px #548da5;
+    overflow: hidden;
+}
+
+.world-banner {
+    text-align: center;
+    padding: 14px 10px 6px;
+}
+
+.world-banner h2 {
+    margin: 0 0 5px;
+    color: #214f32;
+    text-shadow: 1px 2px #fff;
+}
+
+.world-banner p {
+    margin: 0;
+    font-weight: bold;
+}
+
+.game-world {
+    position: relative;
+    min-height: 225px;
+    padding: 20px 14px 0;
+    background: linear-gradient(
+        #8dd8f5 0 58%,
+        #77c84d 58% 100%
+    );
+    overflow: hidden;
+}
+
+.cloud {
+    position: absolute;
+    font-size: 36px;
+    opacity: .9;
+}
+
+.cloud.one {
+    left: 9%;
+    top: 8px;
+}
+
+.cloud.two {
+    right: 13%;
+    top: 28px;
+}
+
+.ground {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 62px;
+    background: repeating-linear-gradient(
+        90deg,
+        #795332 0 48px,
+        #69472d 48px 52px
+    );
+    border-top: 12px solid #4e9d3e;
+}
+
+.world-items {
+    position: absolute;
+    bottom: 58px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: end;
+    font-size: 35px;
+    pointer-events: none;
+}
+
+.player {
+    position: absolute;
+    z-index: 3;
+    bottom: 55px;
+    left: 7%;
+    width: 48px;
+    height: 65px;
+    transition: left .16s linear;
+    text-align: center;
+    font-size: 43px;
+    filter: drop-shadow(2px 3px 0 #3336);
+}
+
+.player small {
+    display: block;
+    font-size: 10px;
+    font-weight: bold;
+    background: #fff;
+    border: 1px solid #333;
+    border-radius: 4px;
+    margin-top: -5px;
+}
+
+.portal {
+    position: absolute;
+    z-index: 2;
+    right: 7%;
+    bottom: 55px;
+    width: 65px;
+    height: 88px;
+    border: 7px solid #7445aa;
+    border-radius: 45% 45% 8px 8px;
+    background: radial-gradient(
+        ellipse,
+        #d9b8ff,
+        #6d37a6 70%
+    );
+    box-shadow: 0 0 18px #a95cff;
+    display: grid;
+    place-items: center;
+    font-size: 25px;
+}
+
+.world-status {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fffde8;
+    border: 2px solid #8b6b3f;
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-weight: bold;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: #e8f5d7;
+    border-top: 3px solid #5d8d46;
+}
+
+.controls button,
+.action-btn {
+    border: 3px solid #62472d;
+    background: #f4c65a;
+    color: #30291d;
+    font-weight: bold;
+    padding: 10px 15px;
+    box-shadow: 0 3px #62472d;
+    cursor: pointer;
+}
+
+.controls button:active,
+.action-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px #62472d;
+}
+
+.instructions {
+    text-align: center;
+    font-size: 13px;
+    padding: 0 8px 10px;
+    background: #e8f5d7;
+    margin: 0;
+}
+
+.columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(230px, .65fr);
+    gap: 15px;
+    margin-top: 18px;
+}
+
+.panel {
+    background: var(--panel);
+    border: 5px solid var(--line);
+    box-shadow: 0 5px #493522;
+    padding: 16px;
+}
+
+.panel h2 {
+    margin: 0 0 10px;
+    color: #386b38;
+}
+
+.question-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #70512d;
+}
+
+.shape-display {
+    min-height: 120px;
+    display: grid;
+    place-items: center;
+    margin: 8px 0;
+}
+
+.shape-display svg {
+    width: 170px;
+    height: 130px;
+}
+
+.question {
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: bold;
+    margin: 8px 0 13px;
+}
+
+.answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.answers button {
+    border: 3px solid #745638;
+    background: #f4d58a;
+    padding: 12px 9px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px #745638;
+    color: #2d2a24;
+}
+
+.answers button:hover:not(:disabled) {
+    background: #ffe8a9;
+}
+
+.answers button:disabled {
+    cursor: default;
+    opacity: .9;
+}
+
+.answers button.correct {
+    background: #9bdd91;
+    border-color: #347d3c;
+}
+
+.answers button.wrong {
+    background: #f3a2a2;
+    border-color: #a34444;
+}
+
+.feedback {
+    min-height: 43px;
+    margin: 13px 0 8px;
+    font-weight: bold;
+    line-height: 1.4;
+}
+
+.next {
+    width: 100%;
+    border: 3px solid #245b30;
+    background: #4b9e50;
+    color: white;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 4px #245b30;
+    cursor: pointer;
+}
+
+.next:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.side-panel p {
+    line-height: 1.45;
+}
+
+.badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    background: #e9d7ff;
+    border: 2px solid #8257aa;
+    padding: 7px 9px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.world-list {
+    display: grid;
+    gap: 8px;
+}
+
+.world-item {
+    background: #eee2c9;
+    border: 2px solid #8d7048;
+    padding: 9px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.world-item.active {
+    background: #d7f0bd;
+    border-color: #4c8d3c;
+}
+
+.world-item.locked {
+    opacity: .55;
+}
+
+.finish {
+    text-align: center;
+}
+
+.finish h2 {
+    font-size: 28px;
+}
+
+footer {
+    text-align: center;
+    padding: 14px;
+    color: #214d2c;
+    font-weight: bold;
+}
+
+@media(max-width: 700px) {
+    .columns {
+        grid-template-columns: 1fr;
+    }
+
+    .game-world {
+        min-height: 205px;
+    }
+
+    .answers {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>⛏️ POLYGON CRAFT ⛏️</h1>
+    <p>Shape Explorer · Year 3 Mathematics</p>
+
+    <div class="hud">
+        <span>⭐ Score: <b id="score">0</b></span>
+        <span>🌎 World: <b id="worldNumber">1</b>/3</span>
+        <span>🧩 Question: <b id="questionNumber">1</b>/3</span>
+    </div>
+</header>
+
+<main>
+
+    <section class="world-card">
+
+        <div class="world-banner">
+            <h2 id="worldTitle">WORLD 1: GRASSLAND</h2>
+            <p id="worldSubtitle">
+                Beginner · Discover polygon properties
+            </p>
+        </div>
+
+        <div class="game-world" id="gameWorld">
+
+            <span class="cloud one">☁️</span>
+            <span class="cloud two">☁️</span>
+
+            <div class="world-status" id="worldStatus">
+                Complete the quiz to unlock the portal!
+            </div>
+
+            <div class="world-items" id="worldItems">
+                <span>🌳</span>
+                <span>🪨</span>
+                <span>🌼</span>
+                <span>🌳</span>
+            </div>
+
+            <div class="player" id="player">
+                🧑‍🚀
+                <small>YOU</small>
+            </div>
+
+            <div class="portal" id="portal" title="Portal">
+                🔒
+            </div>
+
+            <div class="ground"></div>
+
+        </div>
+
+        <div class="controls">
+            <button onclick="movePlayer(-1)">
+                ⬅️ LEFT
+            </button>
+
+            <button onclick="movePlayer(1)">
+                RIGHT ➡️
+            </button>
+
+            <button onclick="tryPortal()">
+                🚪 ENTER PORTAL
+            </button>
+        </div>
+
+        <p class="instructions">
+            Move your character with ← → or A / D.
+            Complete all 3 questions to unlock the next world!
+        </p>
+
+    </section>
+
+    <section class="columns" id="gameColumns">
+
+        <div class="panel">
+
+            <div class="question-meta">
+                <span id="missionLabel">MISSION 1</span>
+                <span id="difficulty">⭐ EASY</span>
+            </div>
+
+            <h2 id="missionTitle">Find the Polygon!</h2>
+
+            <div class="shape-display" id="shapeDisplay"></div>
+
+            <div class="question" id="questionText"></div>
+
+            <div class="answers" id="answers"></div>
+
+            <div class="feedback" id="feedback" aria-live="polite">
+                Choose the best answer to earn 10 points.
+            </div>
+
+            <button
+                class="next"
+                id="nextButton"
+                onclick="nextQuestion()"
+                disabled
+            >
+                Next question ➜
+            </button>
+
+        </div>
+
+        <aside class="panel side-panel">
+
+            <h2>📘 Explorer's Guide</h2>
+
+            <p>
+                <b>A polygon:</b> a flat, closed shape with
+                3 or more straight sides and no curved sides.
+            </p>
+
+            <p>
+                <b>A regular polygon:</b> a polygon with
+                all sides equal in length and all angles equal.
+            </p>
+
+            <div class="badges">
+                <span class="badge">Straight sides</span>
+                <span class="badge">Flat shape</span>
+                <span class="badge">No curves</span>
+                <span class="badge">Equal sides = regular</span>
+            </div>
+
+            <h2 style="margin-top:18px">
+                🗺️ Worlds
+            </h2>
+
+            <div class="world-list" id="worldList"></div>
+
+        </aside>
+
+    </section>
+
+</main>
+
+<footer>
+    🌟 Explore, think and build your polygon knowledge! 🌟
+</footer>
+
+<script>
+
+// ===================================
+// POLYGON CRAFT - GAME QUESTIONS
+// Each world becomes more difficult.
+// ===================================
+
+const worlds = [
+
+    // WORLD 1: EASY
+    {
+        name: "WORLD 1: GRASSLAND",
+        subtitle: "Beginner · Discover polygon properties",
+        difficulty: "⭐ EASY",
+        theme: "🌳 🪨 🌼 🌳",
+
+        questions: [
+
+            {
+                title: "Find the Polygon!",
+                shape: "triangle",
+                text: "How many straight sides does this shape have?",
+
+                options: [
+                    "2 sides",
+                    "3 sides",
+                    "4 sides",
+                    "No straight sides"
+                ],
+
+                answer: 1,
+
+                why: "A triangle has 3 straight sides, so it is a polygon."
+            },
+
+            {
+                title: "Flat or Curved?",
+                shape: "circle",
+                text: "Is this shape a polygon?",
+
+                options: [
+                    "Yes, because it is flat",
+                    "No, because it has a curved edge",
+                    "Yes, because it is round",
+                    "No, because it has 4 sides"
+                ],
+
+                answer: 1,
+
+                why: "A circle has a curved edge. Polygons have only straight sides."
+            },
+
+            {
+                title: "Polygon Properties",
+                shape: "pentagon",
+                text: "Which statement is true about this pentagon?",
+
+                options: [
+                    "It has 5 straight sides",
+                    "It has a curved side",
+                    "It has only 2 sides",
+                    "It is not a flat shape"
+                ],
+
+                answer: 0,
+
+                why: "A pentagon is a flat shape with 5 straight sides and no curved sides."
+            }
+
+        ]
+    },
+
+    // WORLD 2: MEDIUM
+    {
+        name: "WORLD 2: DESERT TEMPLE",
+        subtitle: "Intermediate · Regular or irregular?",
+        difficulty: "⭐⭐ MEDIUM",
+        theme: "🏜️ 🧱 🌵 🏺",
+
+        questions: [
+
+            {
+                title: "Equal-Side Check",
+                shape: "square",
+                text: "A square has 4 straight sides. Are all its sides equal in length?",
+
+                options: [
+                    "Yes",
+                    "No",
+                    "Only 2 sides are equal",
+                    "It has curved sides"
+                ],
+
+                answer: 0,
+
+                why: "A square has 4 equal sides. It is a regular polygon."
+            },
+
+            {
+                title: "Regular or Irregular?",
+                shape: "rectangle",
+                text: "This rectangle is longer than it is wide. Is it a regular polygon?",
+
+                options: [
+                    "Yes, all 4 sides are equal",
+                    "No, not all 4 sides are equal",
+                    "No, it has a curved side",
+                    "Yes, because it has 4 sides"
+                ],
+
+                answer: 1,
+
+                why: "A non-square rectangle has 4 straight sides, but not all sides are equal. It is an irregular polygon."
+            },
+
+            {
+                title: "Choose the Regular Polygon",
+                shape: "hexagon",
+                text: "Which shape is regular if all its sides and angles are equal?",
+
+                options: [
+                    "An uneven triangle",
+                    "A regular hexagon",
+                    "A long rectangle",
+                    "A circle"
+                ],
+
+                answer: 1,
+
+                why: "A regular hexagon has 6 equal sides and 6 equal angles."
+            }
+
+        ]
+    },
+
+    // WORLD 3: HARD
+    {
+        name: "WORLD 3: CRYSTAL CASTLE",
+        subtitle: "Challenge · Analyse the properties",
+        difficulty: "⭐⭐⭐ HARD",
+        theme: "💎 🏰 ✨ 🔮",
+
+        questions: [
+
+            {
+                title: "Analyse the Shape",
+                shape: "irregularPentagon",
+                text: "This pentagon has 5 straight sides, but the sides are not all equal. How should it be classified?",
+
+                options: [
+                    "Regular polygon",
+                    "Irregular polygon",
+                    "Not a polygon",
+                    "A circle"
+                ],
+
+                answer: 1,
+
+                why: "It is an irregular polygon because it has straight sides but not all sides are equal."
+            },
+
+            {
+                title: "Find the Incorrect Statement",
+                shape: "triangle",
+                text: "Which statement is NOT true about polygons?",
+
+                options: [
+                    "They are flat shapes",
+                    "They have 3 or more straight sides",
+                    "They have curved sides",
+                    "They have no curved sides"
+                ],
+
+                answer: 2,
+
+                why: "Polygons do not have curved sides. Their boundaries are made of straight line segments."
+            },
+
+            {
+                title: "Master Builder Challenge",
+                shape: "square",
+                text: "A shape is flat, closed, has 4 straight sides of equal length and no curved sides. What is it?",
+
+                options: [
+                    "An irregular quadrilateral",
+                    "A circle",
+                    "A regular square",
+                    "A curved shape"
+                ],
+
+                answer: 2,
+
+                why: "A square has one flat surface, 4 equal straight sides and no curved sides. It is a regular polygon."
+            }
+
+        ]
+    }
+
+];
+
+
+// ===================================
+// SHAPE DRAWINGS
+// ===================================
+
+const shapeSVG = {
+
+    triangle:
+    '<polygon points="90,10 160,120 20,120" fill="#f4c542" stroke="#263238" stroke-width="5"/>',
+
+    square:
+    '<rect x="35" y="12" width="110" height="110" fill="#e97850" stroke="#263238" stroke-width="5"/>',
+
+    circle:
+    '<circle cx="90" cy="70" r="55" fill="#e88bc0" stroke="#263238" stroke-width="5"/>',
+
+    pentagon:
+    '<polygon points="90,7 165,58 137,130 43,130 15,58" fill="#64a9e8" stroke="#263238" stroke-width="5"/>',
+
+    irregularPentagon:
+    '<polygon points="55,12 155,45 135,125 65,112 20,65" fill="#9c83d8" stroke="#263238" stroke-width="5"/>',
+
+    hexagon:
+    '<polygon points="45,12 135,12 170,70 135,128 45,128 10,70" fill="#65b96a" stroke="#263238" stroke-width="5"/>',
+
+    rectangle:
+    '<rect x="12" y="35" width="156" height="72" fill="#f0a34d" stroke="#263238" stroke-width="5"/>'
+
+};
+
+
+// ===================================
+// GAME VARIABLES
+// ===================================
+
+let worldIndex = 0;
+let questionIndex = 0;
+let score = 0;
+let playerPosition = 7;
+let answered = false;
+
+let unlockedWorlds = 1;
+let completedWorlds = [];
+
+
+// ===================================
+// GET CURRENT QUESTION
+// ===================================
+
+function currentQuestion() {
+
+    return worlds[worldIndex].questions[questionIndex];
+
+}
+
+
+// ===================================
+// DISPLAY WORLD
+// ===================================
+
+function renderWorld() {
+
+    const w = worlds[worldIndex];
+
+    document.getElementById('worldTitle').textContent = w.name;
+
+    document.getElementById('worldSubtitle').textContent = w.subtitle;
+
+    document.getElementById('worldItems').textContent = w.theme;
+
+    document.getElementById('worldNumber').textContent = worldIndex + 1;
+
+    document.getElementById('worldStatus').textContent =
+        completedWorlds.includes(worldIndex)
+        ? 'World cleared! Portal is open!'
+        : 'Complete all 3 questions to unlock the portal!';
+
+    document.getElementById('portal').textContent =
+        completedWorlds.includes(worldIndex) ? '🌀' : '🔒';
+
+    document.getElementById('portal').style.borderColor =
+        ['#7445aa', '#b77a25', '#347aab'][worldIndex];
+
+    playerPosition = 7;
+
+    updatePlayer();
+
+    renderWorldList();
+
+}
+
+
+// ===================================
+// DISPLAY WORLD UNLOCK STATUS
+// ===================================
+
+function renderWorldList() {
+
+    const list = document.getElementById('worldList');
+
+    list.innerHTML = worlds.map((w, i) => {
+
+        const isUnlocked = i < unlockedWorlds;
+
+        const isDone = completedWorlds.includes(i);
+
+        return `
+            <div class="world-item
+                ${i === worldIndex ? 'active' : ''}
+                ${!isUnlocked ? 'locked' : ''}">
+
+                <span>
+                    ${isUnlocked ? '🌎' : '🔒'}
+                    ${w.name.replace(/^WORLD \d: /, '')}
+                </span>
+
+                <span>
+                    ${isDone ? '✅' : isUnlocked ? 'OPEN' : 'LOCKED'}
+                </span>
+
+            </div>
+        `;
+
+    }).join('');
+
+}
+
+
+// ===================================
+// PLAYER MOVEMENT
+// ===================================
+
+function updatePlayer() {
+
+    document.getElementById('player').style.left =
+        playerPosition + '%';
+
+}
+
+
+function movePlayer(direction) {
+
+    playerPosition = Math.max(
+        2,
+        Math.min(86, playerPosition + direction * 5)
+    );
+
+    updatePlayer();
+
+}
+
+
+// ===================================
+// DISPLAY QUESTIONS
+// ===================================
+
+function renderQuestion() {
+
+    answered = false;
+
+    const q = currentQuestion();
+
+    document.getElementById('missionLabel').textContent =
+        `MISSION ${questionIndex + 1} / 3`;
+
+    document.getElementById('difficulty').textContent =
+        worlds[worldIndex].difficulty;
+
+    document.getElementById('missionTitle').textContent =
+        q.title;
+
+    document.getElementById('shapeDisplay').innerHTML =
+        `<svg viewBox="0 0 180 140" role="img" aria-label="Shape illustration">
+            ${shapeSVG[q.shape]}
+        </svg>`;
+
+    document.getElementById('questionText').textContent =
+        q.text;
+
+    document.getElementById('questionNumber').textContent =
+        questionIndex + 1;
+
+    document.getElementById('feedback').textContent =
+        'Choose the best answer to earn 10 points.';
+
+    document.getElementById('nextButton').disabled = true;
+
+    document.getElementById('nextButton').textContent =
+        questionIndex === 2
+        ? 'Finish world ➜'
+        : 'Next question ➜';
+
+    document.getElementById('answers').innerHTML = '';
+
+    q.options.forEach((option, i) => {
+
+        const button = document.createElement('button');
+
+        button.textContent = option;
+
+        button.addEventListener('click', () => checkAnswer(i));
+
+        document.getElementById('answers').appendChild(button);
+
+    });
+
+}
+
+
+// ===================================
+// CHECK ANSWER AND GIVE MARKS
+// ===================================
+
+function checkAnswer(choice) {
+
+    if (answered) return;
+
+    answered = true;
+
+    const q = currentQuestion();
+
+    const buttons = [
+        ...document.querySelectorAll('#answers button')
+    ];
+
+    buttons.forEach((button, i) => {
+
+        button.disabled = true;
+
+        if (i === q.answer) {
+            button.classList.add('correct');
+        }
+
+        if (i === choice && choice !== q.answer) {
+            button.classList.add('wrong');
+        }
+
+    });
+
+    if (choice === q.answer) {
+
+        score += 10;
+
+        document.getElementById('feedback').textContent =
+            '✅ Correct! ' + q.why;
+
+    } else {
+
+        document.getElementById('feedback').textContent =
+            '💡 Not quite. ' + q.why;
+
+    }
+
+    document.getElementById('score').textContent = score;
+
+    document.getElementById('nextButton').disabled = false;
+
+}
+
+
+// ===================================
+// NEXT QUESTION
+// ===================================
+
+function nextQuestion() {
+
+    if (!answered) return;
+
+    if (questionIndex < 2) {
+
+        questionIndex++;
+
+        renderQuestion();
+
+    } else {
+
+        completedWorlds.push(worldIndex);
+
+        document.getElementById('worldStatus').textContent =
+            '🎉 World completed! The portal is now open.';
+
+        document.getElementById('portal').textContent = '🌀';
+
+        document.getElementById('feedback').textContent =
+            'World cleared! Move your explorer to the portal or press ENTER PORTAL.';
+
+        document.getElementById('nextButton').textContent =
+            'Portal unlocked! ➜';
+
+        document.getElementById('nextButton').onclick = tryPortal;
+
+        document.getElementById('nextButton').disabled = false;
+
+        renderWorldList();
+
+    }
+
+}
+
+
+// ===================================
+// UNLOCK NEXT WORLD
+// ===================================
+
+function tryPortal() {
+
+    if (!completedWorlds.includes(worldIndex)) {
+
+        document.getElementById('worldStatus').textContent =
+            '🔒 Answer all 3 questions first!';
+
+        return;
+
+    }
+
+    if (worldIndex < worlds.length - 1) {
+
+        unlockedWorlds = Math.max(
+            unlockedWorlds,
+            worldIndex + 2
+        );
+
+        worldIndex++;
+
+        questionIndex = 0;
+
+        document.getElementById('nextButton').onclick = nextQuestion;
+
+        renderWorld();
+
+        renderQuestion();
+
+        document.getElementById('worldStatus').textContent =
+            'Welcome! The next world is more challenging.';
+
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+
+    } else {
+
+        showFinalResult();
+
+    }
+
+}
+
+
+// ===================================
+// FINAL RESULT
+// ===================================
+
+function showFinalResult() {
+
+    document.getElementById('gameColumns').innerHTML = `
+
+        <div class="panel finish" style="grid-column:1/-1">
+
+            <h2>🏆 YOU ARE A POLYGON MASTER! 🏆</h2>
+
+            <p>
+                You explored all 3 worlds and completed 9 missions.
+            </p>
+
+            <h1>⭐ ${score} / 90 ⭐</h1>
+
+            <p>
+                ${
+                    score >= 70
+                    ? 'Amazing work, Shape Explorer!'
+                    : 'Good effort! Review the Explorer’s Guide and try again.'
+                }
+            </p>
+
+            <button class="next" onclick="restartGame()">
+                🔄 PLAY AGAIN
+            </button>
+
+        </div>
+
+    `;
+
+    document.getElementById('worldStatus').textContent =
+        'All worlds completed!';
+
+    document.getElementById('portal').textContent = '🏆';
+
+}
+
+
+// ===================================
+// RESTART GAME
+// ===================================
+
+function restartGame() {
+
+    worldIndex = 0;
+
+    questionIndex = 0;
+
+    score = 0;
+
+    unlockedWorlds = 1;
+
+    completedWorlds = [];
+
+    playerPosition = 7;
+
+    document.getElementById('score').textContent = '0';
+
+    document.getElementById('gameColumns').innerHTML = `
+
+        <div class="panel">
+
+            <div class="question-meta">
+                <span id="missionLabel">MISSION 1</span>
+                <span id="difficulty">⭐ EASY</span>
+            </div>
+
+            <h2 id="missionTitle"></h2>
+
+            <div class="shape-display" id="shapeDisplay"></div>
+
+            <div class="question" id="questionText"></div>
+
+            <div class="answers" id="answers"></div>
+
+            <div class="feedback" id="feedback" aria-live="polite"></div>
+
+            <button
+                class="next"
+                id="nextButton"
+                onclick="nextQuestion()"
+                disabled
+            >
+                Next question ➜
+            </button>
+
+        </div>
+
+        <aside class="panel side-panel">
+
+            <h2>📘 Explorer's Guide</h2>
+
+            <p>
+                <b>A polygon:</b> a flat, closed shape with
+                3 or more straight sides and no curved sides.
+            </p>
+
+            <p>
+                <b>A regular polygon:</b> a polygon with
+                all sides equal in length and all angles equal.
+            </p>
+
+            <div class="badges">
+                <span class="badge">Straight sides</span>
+                <span class="badge">Flat shape</span>
+                <span class="badge">No curves</span>
+                <span class="badge">Equal sides = regular</span>
+            </div>
+
+            <h2 style="margin-top:18px">🗺️ Worlds</h2>
+
+            <div class="world-list" id="worldList"></div>
+
+        </aside>
+
+    `;
+
+    renderWorld();
+
+    renderQuestion();
+
+}
+
+
+// ===================================
+// KEYBOARD CONTROLS
+// ===================================
+
+document.addEventListener('keydown', event => {
+
+    if (
+        ['ArrowLeft', 'a', 'A'].includes(event.key)
+    ) {
+
+        event.preventDefault();
+
+        movePlayer(-1);
+
+    }
+
+    if (
+        ['ArrowRight', 'd', 'D'].includes(event.key)
+    ) {
+
+        event.preventDefault();
+
+        movePlayer(1);
+
+    }
+
+    if (
+        event.key === 'Enter' &&
+        completedWorlds.includes(worldIndex)
+    ) {
+
+        tryPortal();
+
+    }
+
+});
+
+
+// ===================================
+// START GAME
+// ===================================
+
+renderWorld();
+
+renderQuestion();
+
+</script>
+
+</body>
+</html>
